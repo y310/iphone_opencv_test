@@ -1,5 +1,6 @@
 #import <UIKit/UIKit.h>
 #import <AudioToolbox/AudioToolbox.h>
+#import "TimeRecorder.h"
 
 @interface UIProgressIndicator : UIActivityIndicatorView {
 }
@@ -49,12 +50,14 @@ typedef enum {
 	OpenCVTestViewControllerActionSheetAction actionSheetAction;
 	UIProgressHUD *progressHUD;
 	SystemSoundID alertSoundID;
+	TimeRecorder *timeRecorder;
 }
 
 - (IBAction)loadImage:(id)sender;
 - (IBAction)saveImage:(id)sender;
 - (IBAction)edgeDetect:(id)sender;
 - (IBAction)faceDetect:(id)sender;
+- (IBAction)mosaic:(id)sender;
 
 @property (nonatomic, retain) UIImageView *imageView;
 @end

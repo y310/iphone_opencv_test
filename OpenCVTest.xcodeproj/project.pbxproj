@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4650CB06110B59B400BC94F1 /* TimeRecorder.m in Sources */ = {isa = PBXBuildFile; fileRef = 4650CB05110B59B400BC94F1 /* TimeRecorder.m */; };
 		540723DB0E3DD25B00B598A2 /* MainWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 28AD733E0D9D9553002E5188 /* MainWindow.xib */; };
 		540723DC0E3DD25B00B598A2 /* lena.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 5452E0090E3D08AA00FE4518 /* lena.jpg */; };
 		540723DE0E3DD25B00B598A2 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; };
@@ -33,6 +34,8 @@
 		28D7ACF70DDB3853001CB0EB /* OpenCVTestViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OpenCVTestViewController.m; sourceTree = "<group>"; };
 		29B97316FDCFA39411CA2CEA /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		32CA4F630368D1EE00C91783 /* OpenCVTest_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OpenCVTest_Prefix.pch; sourceTree = "<group>"; };
+		4650CB04110B59B400BC94F1 /* TimeRecorder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TimeRecorder.h; sourceTree = "<group>"; };
+		4650CB05110B59B400BC94F1 /* TimeRecorder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TimeRecorder.m; sourceTree = "<group>"; };
 		540723ED0E3DD25B00B598A2 /* OpenCVTest.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OpenCVTest.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		540ABC6A0E3E1C5300E30885 /* haarcascade_frontalface_default.xml */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; name = haarcascade_frontalface_default.xml; path = opencv_device/share/opencv/haarcascades/haarcascade_frontalface_default.xml; sourceTree = "<group>"; };
 		540ABCF50E3E280700E30885 /* Icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Icon.png; sourceTree = "<group>"; };
@@ -67,6 +70,8 @@
 				1D3623250D0F684500981E51 /* OpenCVTestAppDelegate.m */,
 				28D7ACF60DDB3853001CB0EB /* OpenCVTestViewController.h */,
 				28D7ACF70DDB3853001CB0EB /* OpenCVTestViewController.m */,
+				4650CB04110B59B400BC94F1 /* TimeRecorder.h */,
+				4650CB05110B59B400BC94F1 /* TimeRecorder.m */,
 			);
 			path = Classes;
 			sourceTree = "<group>";
@@ -196,6 +201,7 @@
 				540723DE0E3DD25B00B598A2 /* main.m in Sources */,
 				540723DF0E3DD25B00B598A2 /* OpenCVTestAppDelegate.m in Sources */,
 				540723E00E3DD25B00B598A2 /* OpenCVTestViewController.m in Sources */,
+				4650CB06110B59B400BC94F1 /* TimeRecorder.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

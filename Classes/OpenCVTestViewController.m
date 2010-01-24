@@ -7,6 +7,7 @@
 
 - (void)dealloc {
 	AudioServicesDisposeSystemSoundID(alertSoundID);
+	[timeRecorder release];
 	[imageView dealloc];
 	[super dealloc];
 }
@@ -36,7 +37,7 @@
 
 // NOTE You should convert color mode as RGB before passing to this function
 - (UIImage *)UIImageFromIplImage:(IplImage *)image {
-	NSLog(@"IplImage (%d, %d) %d bits by %d channels, %d bytes/row %s", image->width, image->height, image->depth, image->nChannels, image->widthStep, image->channelSeq);
+	//NSLog(@"IplImage (%d, %d) %d bits by %d channels, %d bytes/row %s", image->width, image->height, image->depth, image->nChannels, image->widthStep, image->channelSeq);
 
 	CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
 	NSData *data = [NSData dataWithBytes:image->imageData length:image->imageSize];
@@ -168,6 +169,70 @@
 	}
 }
 
+- (void)opencvMosaic:(NSNumber*)mosaicSize {
+	NSAutoreleasePool * pool = [[NSAutoreleasePool alloc] init];
+	if (imageView.image) {
+		[timeRecorder start];
+		int mSize = [mosaicSize intValue];
+		IplImage *img = [self CreateIplImageFromUIImage:imageView.image];
+		IplImage *dst = cvCreateImage(cvGetSize(img), img->depth, img->nChannels);
+		unsigned int r, g, b;
+		int p, pp, c;
+		
+		for (int i = 0; i < img->height; i += mSize) {
+			for (int j = 0; j < img->width; j += mSize) {
+				r = b = g = 0;
+				p = (i * img->width + j) * 3;
+				c = 0;
+				for (int k = 0; k < mSize; k++) {
+					if (i + k < img->height) {
+						for (int l = 0; l < mSize; l++) {
+							if (j + l < img->width) {
+								pp = p + (k * img->width + l) * 3;
+								b += (unsigned char)img->imageData[pp];
+								g += (unsigned char)img->imageData[pp + 1];
+								r += (unsigned char)img->imageData[pp + 2];
+								c++;
+							}
+						}
+					}
+				}
+				r /= c;
+				g /= c;
+				b /= c;
+				
+				for (int k = 0; k < mSize; k++) {
+					if (i + k < img->height) {
+						for (int l = 0; l < mSize; l++) {
+							if (j + l < img->width) {
+								pp = p + (k * img->width + l) * 3;
+								dst->imageData[pp] = (char)r;
+								dst->imageData[pp + 1] = (char)g;
+								dst->imageData[pp + 2] = (char)b;
+							}
+						}
+					}
+				}
+			}
+		}
+		cvReleaseImage(&img);
+		imageView.image = [self UIImageFromIplImage:dst];
+		cvReleaseImage(&dst);
+		double time = [timeRecorder end];
+		NSLog(@"mosaic: %lfmsec", time);
+		if (mSize < 128) {
+			NSNumber *doubleSize = [[NSNumber alloc] initWithInt:mSize * 2]; 
+			[self performSelectorInBackground:@selector(opencvMosaic:) withObject:doubleSize];
+			[doubleSize release];
+		}
+		else {
+			NSLog(@"average: %lfmsec", [timeRecorder average]);
+		}
+
+	}
+	[self hideProgressIndicator];
+	[pool release];
+}
 
 #pragma mark -
 #pragma mark IBAction
@@ -213,6 +278,15 @@
 	}
 }
 
+- (IBAction)mosaic:(id)sender {
+	cvSetErrMode(CV_ErrModeParent);
+	[self showProgressIndicator:@"Mosaic"];
+	NSNumber *mosaicSize = [[NSNumber alloc] initWithInt:2];
+	[timeRecorder reset];
+	[self performSelectorInBackground:@selector(opencvMosaic:) withObject:mosaicSize];
+	[mosaicSize release];
+}
+
 #pragma mark -
 #pragma mark UIViewControllerDelegate
 
@@ -223,6 +297,7 @@
 
 	NSURL *url = [NSURL fileURLWithPath:[[NSBundle mainBundle] pathForResource:@"Tink" ofType:@"aiff"] isDirectory:NO];
 	AudioServicesCreateSystemSoundID((CFURLRef)url, &alertSoundID);
+	timeRecorder = [[TimeRecorder alloc] init];
 }
 
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
