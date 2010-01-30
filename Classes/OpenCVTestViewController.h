@@ -45,11 +45,17 @@ typedef enum {
 	ActionSheetToSelectTypeOfMarks
 } OpenCVTestViewControllerActionSheetAction;
 
+struct Rgb{
+	unsigned char r;
+	unsigned char g;
+	unsigned char b;
+};
 @interface OpenCVTestViewController : UIViewController <UIActionSheetDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate> {
 	IBOutlet UIImageView *imageView;
 	OpenCVTestViewControllerActionSheetAction actionSheetAction;
 	UIProgressHUD *progressHUD;
 	SystemSoundID alertSoundID;
+	struct Rgb rgb;
 	TimeRecorder *timeRecorder;
 }
 

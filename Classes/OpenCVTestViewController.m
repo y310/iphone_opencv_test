@@ -169,10 +169,18 @@
 	}
 }
 
+//#define STEP1
+//#define STEP2
+//#define STEP3
+//#define STEP4
+//#define STEP5
+//#define STEP6
+#define STEP7
 - (void)opencvMosaic:(NSNumber*)mosaicSize {
 	NSAutoreleasePool * pool = [[NSAutoreleasePool alloc] init];
 	if (imageView.image) {
 		[timeRecorder start];
+#if defined(STEP1)
 		int mSize = [mosaicSize intValue];
 		IplImage *img = [self CreateIplImageFromUIImage:imageView.image];
 		IplImage *dst = cvCreateImage(cvGetSize(img), img->depth, img->nChannels);
@@ -218,15 +226,287 @@
 		cvReleaseImage(&img);
 		imageView.image = [self UIImageFromIplImage:dst];
 		cvReleaseImage(&dst);
+#elif defined(STEP2)
+		int mSize = [mosaicSize intValue];
+		IplImage *img = [self CreateIplImageFromUIImage:imageView.image];
+		IplImage *dst = cvCreateImage(cvGetSize(img), img->depth, img->nChannels);
+		unsigned int r, g, b;
+		int p, pp, c;
+		int width = img->width;
+		int height = img->height;
+		
+		for (int i = 0; i < height; i += mSize) {
+			for (int j = 0; j < width; j += mSize) {
+				r = b = g = 0;
+				p = (i * width + j) * 3;
+				c = 0;
+				for (int k = 0; k < mSize; k++) {
+					if (i + k < height) {
+						for (int l = 0; l < mSize; l++) {
+							if (j + l < width) {
+								pp = p + (k * width + l) * 3;
+								b += (unsigned char)img->imageData[pp];
+								g += (unsigned char)img->imageData[pp + 1];
+								r += (unsigned char)img->imageData[pp + 2];
+								c++;
+							}
+						}
+					}
+				}
+				r /= c;
+				g /= c;
+				b /= c;
+				
+				for (int k = 0; k < mSize; k++) {
+					if (i + k < height) {
+						for (int l = 0; l < mSize; l++) {
+							if (j + l < width) {
+								pp = p + (k * width + l) * 3;
+								dst->imageData[pp] = (char)r;
+								dst->imageData[pp + 1] = (char)g;
+								dst->imageData[pp + 2] = (char)b;
+							}
+						}
+					}
+				}
+			}
+		}
+		cvReleaseImage(&img);
+		imageView.image = [self UIImageFromIplImage:dst];
+		cvReleaseImage(&dst);
+#elif defined(STEP3)
+		int mSize = [mosaicSize intValue];
+		IplImage *img = [self CreateIplImageFromUIImage:imageView.image];
+		IplImage *dst = cvCreateImage(cvGetSize(img), img->depth, img->nChannels);
+		unsigned int r, g, b;
+		int p, pp, c;
+		int width = img->width;
+		int height = img->height;
+		int kMax, lMax;
+		for (int i = 0; i < height; i += mSize) {
+			for (int j = 0; j < width; j += mSize) {
+				r = b = g = 0;
+				p = (i * width + j) * 3;
+				c = 0;
+				kMax = i + mSize < height ? mSize : height - i;
+				lMax = j + mSize < width  ? mSize : width - j;
+				for (int k = 0; k < kMax; k++) {
+					for (int l = 0; l < lMax; l++) {
+						pp = p + (k * width + l) * 3;
+						b += (unsigned char)img->imageData[pp];
+						g += (unsigned char)img->imageData[pp + 1];
+						r += (unsigned char)img->imageData[pp + 2];
+						c++;
+					}
+				}
+				r /= c;
+				g /= c;
+				b /= c;
+				
+				for (int k = 0; k < kMax; k++) {
+					for (int l = 0; l < lMax; l++) {
+						pp = p + (k * width + l) * 3;
+						dst->imageData[pp] = (char)r;
+						dst->imageData[pp + 1] = (char)g;
+						dst->imageData[pp + 2] = (char)b;
+					}
+				}
+			}
+		}
+		cvReleaseImage(&img);
+		imageView.image = [self UIImageFromIplImage:dst];
+		cvReleaseImage(&dst);
+#elif defined(STEP4)
+		int mSize = [mosaicSize intValue];
+		IplImage *img = [self CreateIplImageFromUIImage:imageView.image];
+		IplImage *dst = cvCreateImage(cvGetSize(img), img->depth, img->nChannels);
+		unsigned int r, g, b;
+		int p, pp, c;
+		int width = img->width;
+		int height = img->height;
+		int kMax, lMax;
+		char *imgImageData = img->imageData;
+		char *dstImageData = dst->imageData;
+		for (int i = 0; i < height; i += mSize) {
+			for (int j = 0; j < width; j += mSize) {
+				r = b = g = 0;
+				p = (i * width + j) * 3;
+				kMax = i + mSize < height ? mSize : height - i;
+				lMax = j + mSize < width  ? mSize : width - j;
+				c = kMax * lMax;
+				for (int k = 0; k < kMax; k++) {
+					for (int l = 0; l < lMax; l++) {
+						pp = p + (k * width + l) * 3;
+						b += (unsigned char)imgImageData[pp];
+						g += (unsigned char)imgImageData[pp + 1];
+						r += (unsigned char)imgImageData[pp + 2];
+					}
+				}
+				r /= c;
+				g /= c;
+				b /= c;
+				
+				for (int k = 0; k < kMax; k++) {
+					for (int l = 0; l < lMax; l++) {
+						pp = p + (k * width + l) * 3;
+						dstImageData[pp] = (char)r;
+						dstImageData[pp + 1] = (char)g;
+						dstImageData[pp + 2] = (char)b;
+					}
+				}
+			}
+		}
+		cvReleaseImage(&img);
+		imageView.image = [self UIImageFromIplImage:dst];
+		cvReleaseImage(&dst);
+#elif defined(STEP5)
+		int mSize = [mosaicSize intValue];
+		IplImage *img = [self CreateIplImageFromUIImage:imageView.image];
+		IplImage *dst = cvCreateImage(cvGetSize(img), img->depth, img->nChannels);
+		unsigned int r, g, b;
+		int p, pp, c;
+		int width = img->width;
+		int height = img->height;
+		int kMax, lMax;
+		char *imgImageData = img->imageData;
+		char *dstImageData = dst->imageData;
+		for (int i = 0; i < height; i += mSize) {
+			for (int j = 0; j < width; j += mSize) {
+				r = b = g = 0;
+				p = (i * width + j) * 3;
+				kMax = i + mSize < height ? mSize : height - i;
+				lMax = j + mSize < width  ? mSize : width - j;
+				c = kMax * lMax;
+				for (int k = 0; k < kMax; k++) {
+					pp = p + (k * width * 3);
+					for (int l = 0; l < lMax; l++) {
+						b += (unsigned char)imgImageData[pp++];
+						g += (unsigned char)imgImageData[pp++];
+						r += (unsigned char)imgImageData[pp++];
+					}
+				}
+				r /= c;
+				g /= c;
+				b /= c;
+				
+				for (int k = 0; k < kMax; k++) {
+					pp = p + (k * width * 3);
+					for (int l = 0; l < lMax; l++) {
+						dstImageData[pp++] = (char)r;
+						dstImageData[pp++] = (char)g;
+						dstImageData[pp++] = (char)b;
+					}
+				}
+			}
+		}
+		cvReleaseImage(&img);
+		imageView.image = [self UIImageFromIplImage:dst];
+		cvReleaseImage(&dst);
+#elif defined(STEP6)
+		int mSize = [mosaicSize intValue];
+		IplImage *img = [self CreateIplImageFromUIImage:imageView.image];
+		IplImage *dst = cvCreateImage(cvGetSize(img), img->depth, img->nChannels);
+		unsigned int r, g, b;
+		int p, pp, c;
+		int width = img->width;
+		int height = img->height;
+		int stride = width * 3;
+		int offset;
+		int kMax, lMax;
+		char *imgImageData = img->imageData;
+		char *dstImageData = dst->imageData;
+		for (int i = 0; i < height; i += mSize) {
+			for (int j = 0; j < width; j += mSize) {
+				r = b = g = 0;
+				p = (i * width + j) * 3;
+				kMax = i + mSize < height ? mSize : height - i;
+				lMax = j + mSize < width  ? mSize : width - j;
+				c = kMax * lMax;
+				pp = offset = p;
+				for (int k = 0; k < kMax; k++) {	
+					for (int l = 0; l < lMax; l++) {
+						b += (unsigned char)imgImageData[pp++];
+						g += (unsigned char)imgImageData[pp++];
+						r += (unsigned char)imgImageData[pp++];
+					}
+					offset += stride;
+					pp = offset;
+				}
+				r /= c;
+				g /= c;
+				b /= c;
+				pp = offset = p;
+				for (int k = 0; k < kMax; k++) {
+					for (int l = 0; l < lMax; l++) {
+						dstImageData[pp++] = (char)r;
+						dstImageData[pp++] = (char)g;
+						dstImageData[pp++] = (char)b;
+					}
+					offset += stride;
+					pp = offset;
+				}
+			}
+		}
+		cvReleaseImage(&img);
+		imageView.image = [self UIImageFromIplImage:dst];
+		cvReleaseImage(&dst);
+#elif defined(STEP7)
+		int mSize = [mosaicSize intValue];
+		IplImage *img = [self CreateIplImageFromUIImage:imageView.image];
+		IplImage *dst = cvCreateImage(cvGetSize(img), img->depth, img->nChannels);
+		unsigned int r, g, b;
+		int p, pp, c;
+		int width = img->width;
+		int height = img->height;
+		int stride = width * 3;
+		int offset;
+		int kMax, lMax;
+		char *imgImageData = img->imageData;
+		struct Rgb *dstImageData = (struct Rgb*)dst->imageData;
+		for (int i = 0; i < height; i += mSize) {
+			kMax = i + mSize < height ? mSize : height - i;
+			for (int j = 0; j < width; j += mSize) {
+				r = b = g = 0;
+				p = (i * width + j) * 3;
+				lMax = j + mSize < width  ? mSize : width - j;
+				c = kMax * lMax;
+				pp = offset = p;
+				for (int k = 0; k < kMax; k++) {	
+					for (int l = 0; l < lMax; l++) {
+						b += (unsigned char)imgImageData[pp++];
+						g += (unsigned char)imgImageData[pp++];
+						r += (unsigned char)imgImageData[pp++];
+					}
+					offset += stride;
+					pp = offset;
+				}
+				rgb.r = r / c;
+				rgb.g = g / c;
+				rgb.b = b / c;
+				pp = offset = i * width + j;
+				for (int k = 0; k < kMax; k++) {
+					for (int l = 0; l < lMax; l++) {
+						dstImageData[pp++] = rgb;
+					}
+					offset += width;
+					pp = offset;
+				}
+			}
+		}
+		cvReleaseImage(&img);
+		imageView.image = [self UIImageFromIplImage:dst];
+		cvReleaseImage(&dst);
+		
+#endif
 		double time = [timeRecorder end];
-		NSLog(@"mosaic: %lfmsec", time);
+		NSLog(@"\t%d\t%lf\tmsec",mSize, time);
 		if (mSize < 128) {
 			NSNumber *doubleSize = [[NSNumber alloc] initWithInt:mSize * 2]; 
 			[self performSelectorInBackground:@selector(opencvMosaic:) withObject:doubleSize];
 			[doubleSize release];
 		}
 		else {
-			NSLog(@"average: %lfmsec", [timeRecorder average]);
+			NSLog(@"\taverage:\t%lf\tmsec", [timeRecorder average]);
 		}
 
 	}
@@ -327,7 +607,7 @@
 				UIImagePickerController *picker = [[UIImagePickerController alloc] init];
 				picker.sourceType = sourceType;
 				picker.delegate = self;
-				picker.allowsImageEditing = NO;
+				picker.allowsEditing = NO;
 				[self presentModalViewController:picker animated:YES];
 				[picker release];
 			}
