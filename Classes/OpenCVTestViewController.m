@@ -175,7 +175,46 @@
 //#define STEP4
 //#define STEP5
 //#define STEP6
-#define STEP7
+//#define STEP7
+#define STEP8
+
+void mosaic(char *imgImageData, char *dstImageData, int width, int sX, int sY, int w, int h, int wmSize, int hmSize, int stride) {
+	int dp = width * 3;
+	int dpp = wmSize * 3;
+	unsigned int r, g, b;
+	int p, pp, c;
+	c = wmSize * hmSize;
+	
+	for (int y = sY; y < h; y++) {
+		p = y * dp * hmSize;
+		for (int x = sX; x < w; x++, p += dpp) {
+			r = b = g = 0;
+			pp = p;
+			for (int yy = 0; yy < hmSize; yy++) {
+				for (int xx = 0; xx < wmSize; xx++) {
+					b += (unsigned char)imgImageData[pp++];
+					g += (unsigned char)imgImageData[pp++];
+					r += (unsigned char)imgImageData[pp++];
+				}
+				pp += stride;
+			}
+			r /= c;
+			g /= c;
+			b /= c;
+			
+			pp = p;
+			for (int yy = 0; yy < hmSize; yy++) {
+				for (int xx = 0; xx < wmSize; xx++) {
+					dstImageData[pp++] = (char)r;
+					dstImageData[pp++] = (char)g;
+					dstImageData[pp++] = (char)b;
+				}
+				pp += stride;
+			}
+		}
+	}
+}
+
 - (void)opencvMosaic:(NSNumber*)mosaicSize {
 	NSAutoreleasePool * pool = [[NSAutoreleasePool alloc] init];
 	if (imageView.image) {
@@ -493,6 +532,35 @@
 				}
 			}
 		}
+		cvReleaseImage(&img);
+		imageView.image = [self UIImageFromIplImage:dst];
+		cvReleaseImage(&dst);
+#elif defined(STEP8)
+		int mSize = [mosaicSize intValue];
+		IplImage *img = [self CreateIplImageFromUIImage:imageView.image];
+		IplImage *dst = cvCreateImage(cvGetSize(img), img->depth, img->nChannels);
+		int width = img->width;
+		int height = img->height;
+		char *imgImageData = img->imageData;
+		char *dstImageData = dst->imageData;
+		
+		int wBlockCnt = width / mSize;
+		int hBlockCnt = height / mSize;
+		
+		/* 割り切れる領域 */
+		mosaic(imgImageData, dstImageData, width, 0, 0, wBlockCnt, hBlockCnt, mSize, mSize, (width - mSize) * 3);
+		
+		/* 割り切れない領域 */
+		if ( width % mSize > 0) {
+			mosaic(imgImageData, dstImageData, width, wBlockCnt, 0, wBlockCnt + 1, hBlockCnt, width % mSize, mSize, (width - (width % mSize)) * 3);
+		}
+		if ( height % mSize > 0) {
+			mosaic(imgImageData, dstImageData, width, 0, hBlockCnt, wBlockCnt, hBlockCnt + 1, mSize, height % mSize, (width - mSize) * 3);
+		}
+		if ( width % mSize > 0 && height % mSize > 0) {
+			mosaic(imgImageData, dstImageData, width, wBlockCnt, hBlockCnt, wBlockCnt + 1, hBlockCnt + 1, width % mSize, height % mSize, (width - (width % mSize)) * 3);
+		}
+
 		cvReleaseImage(&img);
 		imageView.image = [self UIImageFromIplImage:dst];
 		cvReleaseImage(&dst);
