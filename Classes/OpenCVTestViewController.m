@@ -176,17 +176,18 @@
 //#define STEP5
 //#define STEP6
 //#define STEP7
-#define STEP8
+//#define STEP8
+#define STEP9
 
 void mosaic(char *imgImageData, char *dstImageData, int width, int sX, int sY, int w, int h, int wmSize, int hmSize, int stride) {
-	int dp = width * 3;
+	int dp = width * 3 * hmSize;
 	int dpp = wmSize * 3;
 	unsigned int r, g, b;
 	int p, pp, c;
 	c = wmSize * hmSize;
 	
 	for (int y = sY; y < h; y++) {
-		p = y * dp * hmSize;
+		p = y * dp + sX;
 		for (int x = sX; x < w; x++, p += dpp) {
 			r = b = g = 0;
 			pp = p;
@@ -211,6 +212,51 @@ void mosaic(char *imgImageData, char *dstImageData, int width, int sX, int sY, i
 				}
 				pp += stride;
 			}
+		}
+	}
+}
+
+void mosaic2(char *imgImageData, char *dstImageData, int width, int height, int wmSize, int hmSize) {
+	unsigned int elmCnt = (unsigned int) ( width / wmSize) + 1;
+	unsigned int r[elmCnt];
+	unsigned int g[elmCnt];
+	unsigned int b[elmCnt];
+	unsigned int square[elmCnt];
+	unsigned int mappingTable[width * 3]; // 変換テーブル
+	int stride = width * 3;
+	int wmSize3 = wmSize * 3;
+	for ( int i = 0; i < stride; i++) {
+		mappingTable[i] = (unsigned int) ( i / wmSize3);
+	}
+	
+	int p = 0, pp;
+	int nextLine = width * 3 * hmSize;
+	int length = width * height * 3;
+	
+	for ( int lineStart = 0; lineStart < length; lineStart += nextLine) {
+		for ( unsigned int i = 0; i < elmCnt; i++) {
+			r[i] = g[i] = b[i] = square[i] = 0;
+		}
+		int lineEnd = ( lineStart + nextLine) > length ? length: ( lineStart + nextLine);
+		for ( p = lineStart; p < lineEnd;) {
+			pp = mappingTable[p % stride];
+			b[pp] += (unsigned char)imgImageData[p++];
+			g[pp] += (unsigned char)imgImageData[p++];
+			r[pp] += (unsigned char)imgImageData[p++];
+			square[pp]++;
+		}
+		
+		for ( unsigned int i = 0; i < elmCnt && square[i] > 0; i++) {
+			r[i] /= square[i];
+			g[i] /= square[i];
+			b[i] /= square[i];
+		}
+		
+		for ( p = lineStart; p < lineEnd;) {
+			pp = mappingTable[p % stride];
+			dstImageData[p++] = (char) r[pp];
+			dstImageData[p++] = (char) g[pp];
+			dstImageData[p++] = (char) b[pp];
 		}
 	}
 }
@@ -561,6 +607,21 @@ void mosaic(char *imgImageData, char *dstImageData, int width, int sX, int sY, i
 			mosaic(imgImageData, dstImageData, width, wBlockCnt, hBlockCnt, wBlockCnt + 1, hBlockCnt + 1, width % mSize, height % mSize, (width - (width % mSize)) * 3);
 		}
 
+		cvReleaseImage(&img);
+		imageView.image = [self UIImageFromIplImage:dst];
+		cvReleaseImage(&dst);
+#elif defined(STEP9)
+		int mSize = [mosaicSize intValue];
+		IplImage *img = [self CreateIplImageFromUIImage:imageView.image];
+		IplImage *dst = cvCreateImage(cvGetSize(img), img->depth, img->nChannels);
+		int width = img->width;
+		int height = img->height;
+		char *imgImageData = img->imageData;
+		char *dstImageData = dst->imageData;
+		
+		/* 割り切れる領域 */
+		mosaic2(imgImageData, dstImageData, width, height, mSize, mSize);
+				
 		cvReleaseImage(&img);
 		imageView.image = [self UIImageFromIplImage:dst];
 		cvReleaseImage(&dst);
